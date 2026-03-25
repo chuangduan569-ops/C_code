@@ -24,6 +24,7 @@ int llist_delete(LLIST *handler,const void *find_data, llist_cmp cmp);
 int llist_fetch(LLIST *handler,const void *find_data, llist_cmp cmp, void *save);
 
 
+int llist_save(LLIST *handler, const char *pathname);
 
 
 

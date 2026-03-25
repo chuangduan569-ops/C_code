@@ -8,10 +8,6 @@ int main(void)
 	{	
 		for(j = 2; j <= i/j; j++)//j取出2-根号i中所有的数
 		{
-			if(j>2 && j%2==0)
-			{
-				continue;//跳过质数
-			}
 			if(i % j  == 0)
 				break;
 		}

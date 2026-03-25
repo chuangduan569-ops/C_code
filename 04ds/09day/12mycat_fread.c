@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <string.h>
+
+#define BUFSIZE 1024
+#define FREAD
+
+static int mycat(const char *pathname)
+{
+	FILE *fp = NULL;
+	int ch = 0;//ch变量存储从文件流中读取的字符
+	char buf[BUFSIZE] = {0};//buf数组存储的是从文件流中读取的数据；
+	size_t count = 0;//接收成功读到的个数	
+
+	fp = fopen(pathname, "r");//通过fopen(3)以r的形式打开文件
+	if(fp == NULL)
+	{
+		perror("fopen()");//打印错误信息
+		return -1;//由于打开文件失败vai，结束函数，并且返回-1
+	}
+
+	fseek(fp,128,SEEK_SET);//通过fseek把文件流定位到128byte的位置
+
+	printf("[%d] 文件的位置 ： %ld\n",__LINE__, ftell(fp));
+	rewind(fp);//通过rewind()把文件流定位到文件起始位置
+
+
+	while(1)//循环读写文件
+	{
+#if defined(FGETC)
+		ch = fgetc(fp);
+		if(ch == EOF)//判断文件是否读到了EOF
+		{//因为读到文件结尾会返回EOF，读取错误也会返回EOF
+		if(ferror(fp))//判断fp指向的文件流是否出错
+			//如果返回非0说明出错,没有到达文件结尾
+		{
+			fclose(fp);//关闭fp指向的文件流
+			return -2;//由于fp指向的文件流出错，结束函数，并且返回-2	
+		}
+		//	读到了文件结尾，跳出死循环;
+		break;
+		}
+		//int fputc(int c, FILE *stream)
+		//把形参c存储的字符写入到stream文件流指针指向的文件中
+		fputc(ch,stdout);//把ch存储的字符数据写入到stdout中
+#elif defined(FGETS)	
+	memset(buf,0,BUFSIZE);
+	if(fgets(buf,BUFSIZE,fp) == NULL)
+		break;
+	fputs(buf,stdout);
+
+#elif defined(FREAD)
+	memset(buf,0,BUFSIZE);
+	if(count = fread(buf,1,BUFSIZE,fp) == 0)
+	{
+		if(ferror(fp))
+		{
+			fclose(fp);
+			return -2;
+		}
+		break;
+	}
+	
+	fwrite(buf,1,BUFSIZE,stdout);
+
+#endif
+	}
+
+	fclose(fp);//关闭fp指向的文件流
+
+	return 0;
+
+}
+
+
+
+int main(int argc, char *argv[])
+{
+	if(argc<2)
+	{
+		fprintf(stderr,"usag: %s + filename\n", argv[0]);//打印使用说明
+		return -1;//由于命令行参数个数少于2个，结束程序，并且返回-1
+	}
+	
+	mycat(argv[1]);//调用实现的内部函数，完成cat的功能
+	return 0;
+}

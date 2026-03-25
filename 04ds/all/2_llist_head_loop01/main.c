@@ -23,7 +23,7 @@ int main(void)
 	{
 		data.id = 100 + i;
 		sprintf(data.name,"stu%d",i);	
-		int math = 50 + i;
+		data.math = 50 + i;
 		data.next = NULL;
 		data.prev = NULL;
 		llist_insert(handler, &data, HEADINSERT);
@@ -57,7 +57,7 @@ int main(void)
 	printf("---------------------------------\n");
 	llist_display(handler);
 	llist_destroy(handler);
-
+	llist_display(handler);
 
 
 

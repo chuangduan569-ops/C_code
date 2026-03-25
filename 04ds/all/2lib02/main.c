@@ -66,6 +66,7 @@ int main(void)
 		data.math = 50 + i;
 		data.tel = 10010 + i;
 		llist_insert(handler, &data, HEADINSERT);
+		llist_save(handler,"111.txt");
 	}
 
 		llist_display(handler,print);
@@ -78,16 +79,17 @@ int main(void)
 	else
 		{
 			printf("Find It!\n");
-			printf(find);
+			print(find);
 		}	
 */
 	
-#if 0
+#if 1
 	ret = llist_delete(handler, &find_tel, tel_cmp);
 	if(ret != 0)
 		printf("Delete Failed\n");
 	else
 		printf("Delete It!\n");
+	llist_save(handler,"111.txt");
 #else
 	ret = llist_fetch(handler, find_name, name_cmp, &save);
 	if(ret != 0)
@@ -97,7 +99,8 @@ int main(void)
 			printf("Fetch It!\n");
 			print(&save);
 		}
-#endif
+		llist_save(handler,"111.txt");
+#endif	
 
 	printf("\n---------------------------\n");
 

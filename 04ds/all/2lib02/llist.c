@@ -92,7 +92,7 @@ static struct llist_node *_find(LLIST *handler,const void *find_data, llist_cmp 
 
 void *llist_find(LLIST *handler,const void *find_data, llist_cmp cmp)
 {
-	struct llist_node *cur = NULL;
+	struct llist_node *cur = NULL;		
 	cur = _find(handler,find_data,cmp);
 	if(cur != NULL)
 		return cur->data;

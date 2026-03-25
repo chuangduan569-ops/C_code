@@ -10,7 +10,7 @@ int func(struct llist_node *l)
 	
 	if(l == NULL || l->next == NULL)//判断链表是否没有节点或者只有一个节点
 		return 1;
-	s = f = l;//判断链表是否没有节点或者只有一个节点
+	s = f = l;
 	while(f != NULL && f->next != NULL)
 	{//让慢指针走一步,快指针走两步
 		f = f->next->next;
@@ -21,7 +21,7 @@ int func(struct llist_node *l)
 	
 	while(f != NULL)//反转后续链表
 	{
-		p->next = f;
+		p = f->next;
 		f->next = s;
 		s = f;
 		f = p;

@@ -97,6 +97,74 @@ struct tree_node *find_min(struct tree_node *root)
 	return find_min(root->l);
 }
 
+void _draw(struct tree_node *root, int level)
+{
+	int i = 0;
+	if(root == NULL)//判断当前以root指向得头节点为根节点是否为空树
+	return ;//由于当前以root指向的节点为根节点是空树,结束函数
+
+	_draw(root->r, level +1);
+	for(i = 0; i < level; i++)
+		printf(" ");
+	printf("%d\n",root->data.id);
+	_draw(root->l, level +1);//
+}
+
+void tree_draw(struct tree_node *root)
+{
+	system("clear");
+	_draw(root,0);
+	getchar();
+}
+
+int getnum(struct tree_node *root)
+{
+	if(root == NULL)
+	return -1;
+	return 1 + getnum(root->l) + getnum(root->r);
+}
+
+void turnleft(struct tree_node **root)
+{
+	struct tree_node *node = *root;//node代替root指针做操作
+	*root = node->r;//选择当前节点得右孩子作为根节点
+	node->r = NULL;//断掉之前的连接
+	find_min(*root)->l = node;//把断掉的节点挂在新的根节点的最小节点的左边
+	tree_draw(tree);//画整个树
+}
+
+void turnright(struct tree_node **root)
+{
+	struct tree_node *node = *root;//选择当前节点得右孩子作为根节点
+	
+	*root = node->l;//选择当前节点的左孩子作为根节点
+	node->l = NULL;//断掉之前的连接
+	find_max(*root)->r = node;//把断掉的节点挂在新的根节点的最大节点的右边
+	tree_draw(tree);//画整个树
+
+}
+
+
+
+void tree_balance(struct tree_node **root)
+{
+	int num = 0;//用来存储左子树的节点个数和右子树节点个数的差值
+	if(*root == NULL)///判断当前以*root指向的节点为根节点,是否为空树
+		return ;//由于当前以*root指向的节点为根节点是空树,结束函数
+	while(1)
+	{
+		num = getnum((*root)->l) - getnum((*root)->r);//计算差值
+		if(num>=-1 && num<=1)
+			break;//判断是否在平衡范围内
+		if(num<-1)//右边沉
+		turnleft(root);//向左转
+		else //左边沉
+		turnright(root);//向右转
+	}
+}
+
+
+
 int tree_delete(struct tree_node **root, int find_id)
 {
 	struct tree_node **node = root;//node指针代替root指针做操作
@@ -126,6 +194,11 @@ int tree_delete(struct tree_node **root, int find_id)
 	}
 
 }
+
+
+
+
+
 
 int main(void)
 {
@@ -165,6 +238,11 @@ int main(void)
 	printf("---------------------------\n");
 
 	tree_display(tree);//遍历
+	
+	tree_draw(tree);
+
+	tree_balance(&tree);
+	
 	tree_destroy(tree);//销毁
 	printf("destroied!\n");
 	return 0;

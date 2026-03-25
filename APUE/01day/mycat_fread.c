@@ -1,0 +1,76 @@
+/*使用size_t fread(void *ptr, size_t size, size_t nmemb, FILE * stream)实现mycat的命令*/
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+    
+    #define FREAD
+    #define BUFSIZE 32
+    
+  static int mycat(const char *pathname)  
+{
+    FILE *fp = NULL;	//fp指针指向打开的文件流
+    int ch = 0;	//ch变量存储从文件流中读取的字符
+    char buf[BUFSIZE];	//buf数组存储的是从文件流中读取的数据
+    size_t count = 0; //接收成功读到的成员个数
+    
+    fp = fopen(pathname, "r");	//通过fopen(3)以r的方式打开文件
+    if(fp == NULL)//判断打开文件是否失败
+    {
+        perror("fopen()");//打印错误信息
+        return -1;//由于打开文件失败,结束函数,并且返回-1
+    }
+    
+    while(1)
+    {
+#if defined(FGETC)
+    	ch = fgetc(fp);//从fp指向的文件流中读取一个字符
+        if(ch == EOF)//判断是否读取到了EOF
+        {//注意 : 当读到了文件结尾会返回EOF;当读取错误也会返回EOF
+            if(ferror(fp))//判断fp指向的文件流是否出错
+            {
+                fclose(fp);//关闭fp指向的文件流
+                return -2;//由于fp指向的文件流出错,结束函数,并且返回-2
+            }
+            break;//读到了文件结尾,跳出死循环
+        }
+        fputc(ch, stdout);//把ch存储的字符数据写入到stdout中
+#elif defined(FGETS)
+            memset(buf, 0 BUFSIZE);	//清空脏数据
+        if(fgrts(buf, BUFSIZE, fp) == NULL)	//判断是否读取完数据
+            break;
+            fputs(buf,stdout);
+        	sleep(1);
+        
+#elif defined(FREAD)
+    memset(buf, 0, BUFSIZE);	//为了防止每次读写完后buf空间中有数据残留(脏数据)
+         //需要使用memset清空一下
+        if((count = fread(buf, 1, BUFSIZE, fp)) == 0)
+        {
+            if(ferror(fp))
+            {
+                fclose(fp);
+                return -2;
+            }
+            break;
+        }
+        fwrite(buf, 1, count, stdout);
+#endif
+    }
+    fclose(fp);	//关闭fp指向的文件流
+   	fp = NULL;
+    
+    return 0;
+}
+    
+    
+    int main(int argc, char *argv[])
+{
+    if(argc < 2)//判断命令行参数的个数是否少于2个
+    {
+        fprintf(stderr, "Usage : %s + filename\n", argv[0]);//打印使用说明
+        return -1;//由于令行参数的个数少于2个,结束程序,并且返回-1
+    }
+    
+    mycat(argv[1]);	//调用实现的内部函数,完成cat的功能
+    return 0;
+}

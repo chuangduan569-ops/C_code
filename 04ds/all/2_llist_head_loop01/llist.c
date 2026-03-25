@@ -20,6 +20,7 @@ int llist_insert(LLIST *handler, const void *data, int mode)
 	LLIST *p = handler;//代替头指针做操作
 	LLIST *newnode = NULL;//新开辟的空间
 
+
 	newnode = malloc(sizeof(LLIST));
 	if(newnode == NULL)
 	return -1;
@@ -51,7 +52,7 @@ void llist_display(LLIST *handler)
 void llist_destroy(LLIST *handler)
 {
 	LLIST *cur = NULL;//指向要销毁的节点
-	for(cur = handler->next; cur != handler; cur = cur->next)
+	for(cur = handler->next; cur != handler; cur = handler->next)
 	{
 		cur->next->prev = cur->prev;
 		cur->prev->next = cur->next;
