@@ -2,7 +2,7 @@
 #define __ANYTIMER_H
 
 //回调函数类型:参数为void*,用户可以传递任意类型的数据
-typedef void (*handler_t)(void);//定义函数指针类型，指向返回值为void、参数为void*的函数
+typedef void (*handler_t)(void *);//定义函数指针类型，指向返回值为void、参数为void*的函数
 
 extern int anytimer_init(int sec, handler_t func, void *arg);
 
