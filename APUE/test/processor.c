@@ -35,84 +35,6 @@ static void log_msg(const char *msg)
 }
 
 /*
- month_to_num - 月份英文缩写转数字
- 参数mon：月份缩写（如"Mar"）、
-返回值：1-12的数字，失败返回0
- */
-static int month_to_num(const char *mon)
-{
-    if (strcmp(mon, "Jan") == 0) return 1;
-    if (strcmp(mon, "Feb") == 0) return 2;
-    if (strcmp(mon, "Mar") == 0) return 3;
-    if (strcmp(mon, "Apr") == 0) return 4;
-    if (strcmp(mon, "May") == 0) return 5;
-    if (strcmp(mon, "Jun") == 0) return 6;
-    if (strcmp(mon, "Jul") == 0) return 7;
-    if (strcmp(mon, "Aug") == 0) return 8;
-    if (strcmp(mon, "Sep") == 0) return 9;
-    if (strcmp(mon, "Oct") == 0) return 10;
-    if (strcmp(mon, "Nov") == 0) return 11;
-    if (strcmp(mon, "Dec") == 0) return 12;
-    return 0;                   /* 未知月份 */
-}
-/*
- parse_syslog - 解析系统日志行
-输入格式：Mar 27 08:58:42 dc systemd[1026]: message
-输出：timestamp, hostname, program, pid, message 
- 返回值：0成功，-1失败
- */
-static int parse_syslog(const char *line, char *timestamp, int ts_size,
-                        char *hostname, int hn_size,
-                        char *program, int prog_size,
-                        int *pid,
-                        char *message, int msg_size)
-{
-    char mon[8];
-    int day, hour, min, sec;
-    char temp[256];
-    char *p, *q;
-    int year = 2026;
-    
-    // 先用空格分割，兼容一个或多个空格
-    if (sscanf(line, "%s %d %d:%d:%d %s %s", 
-               mon, &day, &hour, &min, &sec, hostname, temp) >= 6) {
-        // 格式匹配成功
-        snprintf(timestamp, ts_size, "%d-%02d-%02d %02d:%02d:%02d",
-                 year, month_to_num(mon), day, hour, min, sec);
-        
-        // 解析程序名和PID
-        p = strchr(temp, '[');
-        if (p) {
-            q = strchr(p, ']');
-            if (q) {
-                *q = '\0';
-                *pid = atoi(p + 1);
-            }
-            *p = '\0';
-            strncpy(program, temp, prog_size - 1);
-        } else {
-            strncpy(program, temp, prog_size - 1);
-            *pid = 0;
-        }
-        program[prog_size - 1] = '\0';
-        
-        // 提取消息（冒号后面的内容）
-        p = strchr(line, ':');
-        if (p) {
-            p++;
-            while (*p == ' ') p++;
-            strncpy(message, p, msg_size - 1);
-            message[msg_size - 1] = '\0';
-        } else {
-            message[0] = '\0';
-        }
-        return 0;
-    }
-    
-    // 解析失败，返回-1
-    return -1;
-}
-/*
  get_level 从消息内容中判断日志级别
  参数 msg日志消息内容
 返回值 ERROR WARN INFO
@@ -135,35 +57,7 @@ static const char *get_level(const char *msg)
 		return "WARN";
 	return "INFO";
 }
-/*
- format_json 格式化JSON字符串
-参数 line 原始日志行
- level 解析出来的日志级别
-output 输出缓冲区
-size 输出缓冲区大小
- */
-static void format_json(const char *line, const char *level, char *output, int size)
-{
-	char timestamp[32];//时间戳字符串
-	char hostname[64];//主机名
-	char program[64];//程序名
-	char message[512];//消息内容
-	int pid;//进程ID
-	//调用解析函数提取各字符串
-	if(parse_syslog(line, timestamp, sizeof(timestamp), hostname, sizeof(hostname), program, sizeof(program), &pid, message, sizeof(message)) < 0)
-	{
-		//解析失败
-		snprintf(output, size, "{\"raw\" : \"%s\"}", line);
-		return;
-	}
-	//构造ISON字符串(使用消息队列(msgq发送))
-snprintf(output, size,
-             "{\"timestamp\":\"%s\",\"level\":\"%s\","
-             "\"host\":\"%s\",\"program\":\"%s\",\"pid\":%d,"
-             "\"message\":\"%s\"}",
-             timestamp, level, hostname, program, pid, message);
-}
-	//工作进程
+
 /*
  worker 工作进程函数
 参数 id 工作进程编号
@@ -174,7 +68,6 @@ snprintf(output, size,
 static void worker(int id)
 {
 	char line[LINE_MAX];//存储一行原始日志
-	char json[MSG_MAX];//存储JSON格式的日志
 	char message[512];//存储消息内容 用于判断级别
 	char worker_name[32];//工作进程名称字符串
 	int read_pos; //共享内存读位置
@@ -216,12 +109,16 @@ static void worker(int id)
 	//判断日志级别
 	level = get_level(message);
 	//只保留 WARN 和 ERROR（文档要求）
-	if(strcmp(level, "WARN") == 0 || strcmp(level, "ERROR") == 0)
-	{
-		format_json(line, level, json, sizeof(json));//格式化字符串
-		//发送消息到消息队列
-		msgq_send(msqid, json, 1);
-	}
+	if(strcmp(level, "WARN") == 0)
+        {
+            // WARN级别：发送到消息队列，类型为2
+            msgq_send(msqid, line, 2);
+        }
+        else if(strcmp(level, "ERROR") == 0)
+        {
+            // ERROR级别：发送到消息队列，类型为3
+            msgq_send(msqid, line, 3);
+        }
 	}
 	}
 	//主函数

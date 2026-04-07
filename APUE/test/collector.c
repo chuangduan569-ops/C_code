@@ -80,7 +80,7 @@ int main(void)
 	ssize_t n; //实际读取的字节数
 	struct stat st; //文件状态结构体，存储文件大小、inode等信息
 
-	log_msg("Collector 启动，监控文件: /tmp/test_logs/syslog.log");//提示信息
+	log_msg("Collector 启动，监控文件: /var/log/syslog");//提示信息
 	
 	//[1] 连接共享内存和信号量
 	shmid = shm_create(SHM_KEY, sizeof(struct shm_buf));//获取已存在的共享内存（主进程已创建） 
