@@ -121,11 +121,11 @@ int main(int argc, char *argv[])
         	}
         	close(pipe_fd[0]);  // 关闭原管道读端（已复制）
 		//play_audio(pipe_fd[0]);//调用播放函数 传入管道的读端
-		// 直接替换进程！子进程变成mpg123
-		// 尝试启动mpg123播放器
+		// 直接替换进程子进程变成mpg123
+		// 尝试启动mpg123播放器 
         	// execlp会替换当前进程，如果成功就不会返回
     		//execlp("mpg123", "mpg123", "-", NULL);
-    		execlp("mpg123", "mpg123", "--buffer", "2048", "-", NULL);
+    		execlp("mpg123", "mpg123", "--buffer", "2048", "-", NULL);//--buffer 刷新接收缓冲区不卡顿 
 			execlp("aplay", "aplay", "-f", "cd", "-t", "wav", NULL);
     		exit(1);
 		//return 0;
