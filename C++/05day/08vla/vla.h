@@ -26,6 +26,8 @@ class VLA
         T &operator[](int i);
         //返回当前对象的成员个数
         int length() const {return m_len;}
+        //给当前对象的最后一个成员位置再添加一个数据
+        void push_back(const T &value);
     private :
         //成员变量
         T *m_a;//指向开辟空间的起始地址
@@ -84,6 +86,22 @@ template <typename T>
 T &VLA<T>::operator[](int i)
 {
     return m_a[i];//返回下标为i的成员的引用
+}
+
+//需要加模板头(扩容)
+template <typename T>
+void VLA<T>::push_back(const T &value)
+{
+    T *tmp;//备份指针
+
+
+    tmp = m_a;//把当前对象动态存储空间的额首地址赋值给备份指针
+    m_a = new T(m_len + 1);//开辟新的动态存储空间(原有的动态存储空间 + 1)
+    memcpy(m_a, tmp, sizeof(T) * m_len);//把原数据拷贝到新的动态存储空间
+    m_a[m_len] = value;//把要插入的新数据存放到新的动态存储空间
+    m_len++;//更新当前对象的成员个数
+    delete[] tmp;//把原空间释放掉
+    tmp = NULL;//避免出现野指针
 }
 
 #endif
